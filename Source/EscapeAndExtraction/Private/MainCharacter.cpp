@@ -12,6 +12,7 @@
 #include "PlayerControllerMain.h"
 #include "StaminaComponent.h"
 #include "HealthComponent.h"
+#include "HotBar.h"
 
 
 AMainCharacter::AMainCharacter()
@@ -26,6 +27,7 @@ AMainCharacter::AMainCharacter()
 
 	stamina_component = CreateDefaultSubobject<UStaminaComponent>("StaminaComponent");
 	health_component = CreateDefaultSubobject<UHealthComponent>("HealthComponent");
+	micro_inventory = CreateDefaultSubobject<UHotBar>("HotBar");
 }
 
 void AMainCharacter::BeginPlay()
@@ -61,7 +63,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		if (move_action && look_action && sprint_action)
+		if (move_action && look_action && sprint_action && attack_action)
 		{
 			EnhancedInputComponent->BindAction(move_action, ETriggerEvent::Triggered, this, &AMainCharacter::move);
 			EnhancedInputComponent->BindAction(look_action, ETriggerEvent::Triggered, this, &AMainCharacter::look);
@@ -69,6 +71,8 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			EnhancedInputComponent->BindAction(sprint_action, ETriggerEvent::Started, this, &AMainCharacter::start_sprint);
 			EnhancedInputComponent->BindAction(sprint_action, ETriggerEvent::Completed, this, &AMainCharacter::stop_sprint);
 			EnhancedInputComponent->BindAction(sprint_action, ETriggerEvent::Canceled, this, &AMainCharacter::stop_sprint);
+
+			EnhancedInputComponent->BindAction(attack_action, ETriggerEvent::Started, this, &AMainCharacter::start_attack);
 		}
 	
 	}
@@ -193,4 +197,14 @@ void AMainCharacter::death_handle()
 		GetCharacterMovement()->DisableMovement();
 		GetCharacterMovement()->StopMovementImmediately();
 	}
+}
+
+void AMainCharacter::start_attack()
+{
+	if (health_component && health_component->is_dead()) return;
+	if (hand_attack_animation)
+	{
+		PlayAnimMontage(hand_attack_animation);
+	}
+	
 }
