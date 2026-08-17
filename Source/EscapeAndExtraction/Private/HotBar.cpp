@@ -67,3 +67,13 @@ void UHotBar::use_item_by_index(int32 index)
 	on_hotbar_changed.Broadcast();
 }
 
+void UHotBar::update_ammo_by_index(int32 index, int32 new_clip, int32 all_ammo)
+{
+	if (hotbar_slots.IsValidIndex(index))
+	{
+		hotbar_slots[index].clip_ammo = new_clip;
+		hotbar_slots[index].ammo_in_inventory = all_ammo;
+
+		on_hotbar_changed.Broadcast();
+	}
+}
