@@ -40,11 +40,20 @@ void AWeapon::on_overlap_begin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 	UHotBar* hotbar = player->micro_inventory;
 		if (hotbar)
 		{
+
 			bool is_picked_up = hotbar->add_item(item_data);
 
 			if (is_picked_up)
 			{
-				Destroy();
+				collision_sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				SetActorEnableCollision(false);
+
+				
+				if (pickup_mesh)
+				{
+					pickup_mesh->SetVisibility(false);
+					SetLifeSpan(0.2f);
+				}
 			}
 			else
 			{

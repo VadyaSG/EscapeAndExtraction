@@ -13,6 +13,8 @@
 #include "StaminaComponent.h"
 #include "HealthComponent.h"
 #include "HotBar.h"
+#include "WeaponComponent.h"
+
 
 
 AMainCharacter::AMainCharacter()
@@ -21,9 +23,11 @@ AMainCharacter::AMainCharacter()
 	
 	spring_arm_comp = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
 	spring_arm_comp->SetupAttachment(GetRootComponent());
+	spring_arm_comp->bUsePawnControlRotation = true;
 	
 	camera_comp = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	camera_comp->SetupAttachment(spring_arm_comp);
+	camera_comp->bUsePawnControlRotation = false;
 
 	stamina_component = CreateDefaultSubobject<UStaminaComponent>("StaminaComponent");
 	health_component = CreateDefaultSubobject<UHealthComponent>("HealthComponent");
@@ -55,6 +59,26 @@ void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (Controller)
+	{
+		FRotator control_rot = GetControlRotation();
+		float pitch = control_rot.Pitch;
+		if (pitch > 180.f)
+		{
+			pitch -= 360.f;
+		}
+		aim_pitch = -pitch;
+	}
+
+	if (cuurent_equipped_item)
+	{
+		UWeaponComponent* weapon_comp =cuurent_equipped_item->FindComponentByClass<UWeaponComponent>();
+		if (weapon_comp != nullptr && camera_comp != nullptr)
+		{
+			weapon_comp->last_camera_loc = camera_comp->GetComponentLocation();
+			weapon_comp->last_camera_rot = camera_comp->GetComponentRotation();
+		}
+	}
 }
 
 void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -63,7 +87,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		if (move_action && look_action && sprint_action && attack_action)
+		if (move_action && look_action && sprint_action && attack_action && hotbar_slot_action && reload_action)
 		{
 			EnhancedInputComponent->BindAction(move_action, ETriggerEvent::Triggered, this, &AMainCharacter::move);
 			EnhancedInputComponent->BindAction(look_action, ETriggerEvent::Triggered, this, &AMainCharacter::look);
@@ -73,6 +97,12 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			EnhancedInputComponent->BindAction(sprint_action, ETriggerEvent::Canceled, this, &AMainCharacter::stop_sprint);
 
 			EnhancedInputComponent->BindAction(attack_action, ETriggerEvent::Started, this, &AMainCharacter::start_attack);
+			EnhancedInputComponent->BindAction(attack_action, ETriggerEvent::Completed, this, &AMainCharacter::stop_attack);
+
+			EnhancedInputComponent->BindAction(hotbar_slot_action, ETriggerEvent::Triggered, this, &AMainCharacter::select_hotbar_slot);
+
+			
+			EnhancedInputComponent->BindAction(reload_action, ETriggerEvent::Started, this, &AMainCharacter::reload);
 		}
 	
 	}
@@ -202,9 +232,164 @@ void AMainCharacter::death_handle()
 void AMainCharacter::start_attack()
 {
 	if (health_component && health_component->is_dead()) return;
-	if (hand_attack_animation)
+	if (is_sprinting)return;
+
+	if (cuurent_equipped_item == nullptr)
 	{
-		PlayAnimMontage(hand_attack_animation);
+		if (hand_attack_animation)
+		{
+			PlayAnimMontage(hand_attack_animation);
+		}
+		return;
 	}
 	
+
+	UWeaponComponent* weapon_comp = cuurent_equipped_item->FindComponentByClass<UWeaponComponent>();
+	
+
+	if (weapon_comp && camera_comp != nullptr && GetWorld() != nullptr)
+	{
+		FVector camera_location = camera_comp->GetComponentLocation();
+		FRotator camera_rotation = camera_comp->GetComponentRotation();
+
+		weapon_comp->start_fire(camera_location, camera_rotation);
+	}
+	
+}
+
+void AMainCharacter::select_hotbar_slot(const FInputActionValue& value)
+{
+	if (health_component && health_component->is_dead()) return;
+	if (!micro_inventory && !GetWorld()) return;
+
+	float slot_value = value.Get<float>();
+	if (FMath::IsNearlyZero(slot_value)) return;
+
+	if (cuurent_equipped_item != nullptr && micro_inventory != nullptr)
+	{
+		UWeaponComponent* old_weapon_comp = cuurent_equipped_item->FindComponentByClass<UWeaponComponent>();
+		if (old_weapon_comp != nullptr)
+		{
+			micro_inventory->update_ammo_by_index(active_slot_index, old_weapon_comp->current_ammo_in_magazine, old_weapon_comp->ammo_in_inventory);
+		}
+	}
+
+	int32 target_index = active_slot_index;
+
+	if (slot_value >= 1.0f && slot_value <= micro_inventory->get_slot_count())
+	{
+		target_index = FMath::RoundToInt(slot_value) - 1;
+	}
+	else
+	{
+		float current_time = GetWorld()->GetTimeSeconds();
+		if (current_time - last_scroll_time < 0.1f)
+		{
+			return;
+		}
+		last_scroll_time = current_time;
+
+		if (slot_value > 0.f)
+		{
+			++target_index;
+		}
+		else
+		{
+			--target_index;
+		}
+
+		int32 max_slot = micro_inventory->get_slot_count();
+		if (target_index >= max_slot) target_index = 0;
+		if (target_index < 0) target_index = max_slot - 1;
+	}
+
+	active_slot_index = target_index;
+
+	const TArray<FHotbarItemSlot>& current_slots = micro_inventory->get_all_slots();
+
+	if (!current_slots.IsValidIndex(target_index)) return;
+	FHotbarItemSlot target_slot = current_slots[target_index];
+
+	if (target_slot.is_emty() || !target_slot.item_class)
+	{
+		if (cuurent_equipped_item)
+		{
+			cuurent_equipped_item->Destroy();
+			cuurent_equipped_item = nullptr;
+		}
+		current_grip_type = EWeaponGripType::Unarmed;
+		return;
+	}
+
+	if (cuurent_equipped_item)
+	{
+		cuurent_equipped_item->Destroy();
+		cuurent_equipped_item = nullptr;
+	}
+
+	FActorSpawnParameters spawn_params;
+	spawn_params.Owner = this;
+	spawn_params.Instigator = GetInstigator();
+	spawn_params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	cuurent_equipped_item = GetWorld()->SpawnActor<AActor>(target_slot.item_class, GetActorLocation(), GetActorRotation(), spawn_params);
+
+	if (cuurent_equipped_item)
+	{
+
+		if (UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(cuurent_equipped_item->GetRootComponent()))
+		{
+			RootPrimitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			RootPrimitive->SetCollisionResponseToAllChannels(ECR_Ignore);
+		}
+
+		UWeaponComponent* new_weapon_comp = cuurent_equipped_item->FindComponentByClass<UWeaponComponent>();
+		if (new_weapon_comp != nullptr)
+		{
+			new_weapon_comp->current_ammo_in_magazine = target_slot.clip_ammo;
+			new_weapon_comp->ammo_in_inventory = target_slot.ammo_in_inventory;
+		}
+
+		FName socket_name = TEXT("RightHandWeaponSocket");
+		if (target_slot.grip_type == EWeaponGripType::Pistol)
+		{
+			socket_name = TEXT("RightPistol");
+		}
+
+		cuurent_equipped_item->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, socket_name);
+		current_grip_type = target_slot.grip_type;
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Slot is emty!"));
+	}
+}
+
+
+void AMainCharacter::reload()
+{
+	if (health_component && health_component->is_dead())return;
+
+	if (cuurent_equipped_item == nullptr)return;
+
+	UWeaponComponent* weapon_comp = cuurent_equipped_item->FindComponentByClass<UWeaponComponent>();
+
+	if (weapon_comp&& weapon_comp->ammo_in_inventory>0)
+	{
+		weapon_comp->reload();
+
+		int32 active_index = get_active_slot_index();
+		micro_inventory->update_ammo_by_index(active_index, weapon_comp->current_ammo_in_magazine, weapon_comp->ammo_in_inventory);
+	}
+}
+
+void AMainCharacter::stop_attack()
+{
+	if (cuurent_equipped_item == nullptr) return;
+
+	UWeaponComponent* weapon_comp = cuurent_equipped_item->FindComponentByClass<UWeaponComponent>();
+	if (weapon_comp != nullptr)
+	{
+		weapon_comp->stop_fire();
+	}
+
 }

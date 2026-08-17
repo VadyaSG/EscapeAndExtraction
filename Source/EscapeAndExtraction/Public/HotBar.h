@@ -6,6 +6,14 @@
 #include "Components/ActorComponent.h"
 #include "HotBar.generated.h"
 
+UENUM(BlueprintType)
+enum class EWeaponGripType : uint8
+{
+	Unarmed     UMETA(DisplayName = "Unarmed"),
+	Rifle       UMETA(DisplayName = "Rifle"),
+	Pistol      UMETA(DisplayName = "Pistol")
+};
+
 USTRUCT(BlueprintType)
 struct FHotbarItemSlot
 {
@@ -22,6 +30,15 @@ struct FHotbarItemSlot
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
 	TSubclassOf<AActor>item_class = nullptr;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Item")
+	EWeaponGripType grip_type = EWeaponGripType::Unarmed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	int32 clip_ammo = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	int32 ammo_in_inventory = 0;
 
 	bool is_emty() const { return item_name.IsNone() || amount <= 0; }
 };
@@ -47,7 +64,12 @@ public:
 	void use_item_by_index(int32 index);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	TArray<FHotbarItemSlot>get_all_slots()const { return hotbar_slots; }
+	const TArray<FHotbarItemSlot>& get_all_slots() const { return hotbar_slots; }
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void update_ammo_by_index(int32 index, int32 new_clip, int32 all_ammo);
+
+	int32 get_slot_count()const { return slot_count; }
 protected:
 	virtual void BeginPlay() override;
 

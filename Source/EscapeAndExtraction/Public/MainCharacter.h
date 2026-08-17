@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "HotBar.h"
 #include "MainCharacter.generated.h"
 
 
@@ -26,8 +27,8 @@ public:
 	
 	AMainCharacter();
 	virtual void Tick(float DeltaTime) override;
-
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	int32 get_active_slot_index()const { return active_slot_index; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputMappingContext* input_mapping_context;
@@ -44,11 +45,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* attack_action;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* hotbar_slot_action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* reload_action;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* hand_attack_animation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UHotBar* micro_inventory;
+
+
 protected:
 	
 	virtual void BeginPlay() override;
@@ -67,6 +76,13 @@ protected:
 	UFUNCTION()
 	void start_attack();
 
+	UFUNCTION()
+	void stop_attack();
+
+
+	UFUNCTION()
+	void select_hotbar_slot(const FInputActionValue& value);
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float forward_walk_speed = 300.f;
 
@@ -82,6 +98,9 @@ protected:
 	UFUNCTION()
 	void on_stamina_emty();
 
+	UFUNCTION()
+	void reload();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* spring_arm_comp;
 
@@ -94,12 +113,24 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UHealthComponent* health_component;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Animations|Combat")
+	EWeaponGripType current_grip_type = EWeaponGripType::Unarmed;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	int32 active_slot_index = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animations|Combat")
+	float aim_pitch = 0.f;
+
 	
 private:
 	float current_forward_input = 0;
+	float last_scroll_time = 0.f;
 
 	UFUNCTION()
 	void death_handle();
-	
+
+	UPROPERTY()
+	AActor* cuurent_equipped_item = nullptr;
 
 };
