@@ -6,6 +6,14 @@
 #include "Components/ActorComponent.h"
 #include "HotBar.generated.h"
 
+
+UENUM(BlueprintType)
+enum class EItemType :uint8
+{
+	Weapon      UMETA(DisplayName = "Weapon"),
+	Consumable   UMETA(DisplayName = "Consumable")
+};
+
 UENUM(BlueprintType)
 enum class EWeaponGripType : uint8
 {
@@ -34,11 +42,17 @@ struct FHotbarItemSlot
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Item")
 	EWeaponGripType grip_type = EWeaponGripType::Unarmed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (EditCondition = "item_type == EItemType::Weapon"))
 	int32 clip_ammo = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (EditCondition = "item_type == EItemType::Weapon"))
 	int32 ammo_in_inventory = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Consumable", meta = (EditCondition = "item_type == EItemType::Consumable"))
+	float restore_count = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	EItemType item_type = EItemType::Weapon;
 
 	bool is_emty() const { return item_name.IsNone() || amount <= 0; }
 };
@@ -79,4 +93,5 @@ protected:
 private:
 	UPROPERTY()
 	TArray<FHotbarItemSlot> hotbar_slots;
+
 };
