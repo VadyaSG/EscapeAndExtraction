@@ -2,6 +2,9 @@
 
 
 #include "HotBar.h"
+#include "MainCharacter.h"
+#include <WeaponComponent.h>
+
 
 UHotBar::UHotBar()
 {
@@ -31,17 +34,43 @@ void UHotBar::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponen
 
 bool UHotBar::add_item(FHotbarItemSlot new_item)
 {
-	if (new_item.is_emty())return false;
+	if (new_item.is_emty()) return false;
 
 	for (int32 i = 0; i < hotbar_slots.Num(); ++i)
 	{
 		if (!hotbar_slots[i].is_emty() && hotbar_slots[i].item_name == new_item.item_name)
 		{
-			hotbar_slots[i].amount += new_item.amount;
-			on_hotbar_changed.Broadcast();
-			return true;
+			if (hotbar_slots[i].item_type == EItemType::Weapon)
+			{
+				hotbar_slots[i].ammo_in_inventory += (new_item.clip_ammo + new_item.ammo_in_inventory);
+
+				if (AMainCharacter* character = Cast<AMainCharacter>(GetOwner()))
+				{
+					if (character->get_active_slot_index() == i)
+					{
+						AActor* equipped = character->get_current_equipped_item();
+						if (equipped)
+						{
+							if (UWeaponComponent* weapon_comp = equipped->FindComponentByClass<UWeaponComponent>())
+							{
+								weapon_comp->ammo_in_inventory = hotbar_slots[i].ammo_in_inventory;
+							}
+						}
+					}
+				}
+				on_hotbar_changed.Broadcast();
+				return true;
+			}
+
+			if (hotbar_slots[i].item_type == EItemType::Consumable)
+			{
+				hotbar_slots[i].amount += new_item.amount;
+				on_hotbar_changed.Broadcast();
+				return true;
+			}
 		}
 	}
+
 	for (int32 i = 0; i < hotbar_slots.Num(); ++i)
 	{
 		if (hotbar_slots[i].is_emty())
@@ -51,6 +80,7 @@ bool UHotBar::add_item(FHotbarItemSlot new_item)
 			return true;
 		}
 	}
+
 	return false;
 }
 

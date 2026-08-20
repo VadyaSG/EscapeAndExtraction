@@ -5,6 +5,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/DamageEvents.h"
 #include "MainCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 
 UWeaponComponent::UWeaponComponent()
@@ -86,6 +87,8 @@ void UWeaponComponent::fire(const FVector& spawn_location, const FRotator& spawn
 		FDamageEvent damage_event;
 		hit_actor->TakeDamage(weapon_damage, damage_event, nullptr, GetOwner());
 
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("%s"), *hit_result.GetActor()->GetName()));
+		
 	}
 
 
@@ -124,12 +127,16 @@ void UWeaponComponent::stop_fire()
 
 void UWeaponComponent::shot_bullet()
 {
-	if (current_ammo_in_magazine <= 0)
+	if (current_ammo_in_magazine <= 0 && ammo_in_inventory > 0)
+	{
+		reload();
+	}
+	if (current_ammo_in_magazine <= 0&&ammo_in_inventory<=0)
 	{
 		stop_fire();
-		return;
-
-		
+		return;	
 	}
+	
+
 	fire(last_camera_loc, last_camera_rot);
 }

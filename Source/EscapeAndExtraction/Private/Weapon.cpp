@@ -5,7 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "MainCharacter.h"
 
-AWeapon::AWeapon()
+APickUpObj::APickUpObj()
 {
  	
 	PrimaryActorTick.bCanEverTick = false;
@@ -23,14 +23,14 @@ AWeapon::AWeapon()
 
 }
 
-void AWeapon::BeginPlay()
+void APickUpObj::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	collision_sphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::on_overlap_begin);
+	collision_sphere->OnComponentBeginOverlap.AddDynamic(this, &APickUpObj::on_overlap_begin);
 }
 
-void AWeapon::on_overlap_begin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APickUpObj::on_overlap_begin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	
 	AMainCharacter* player = Cast<AMainCharacter>(OtherActor);
@@ -63,7 +63,7 @@ void AWeapon::on_overlap_begin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 
 }
 
-void AWeapon::Tick(float DeltaTime)
+void APickUpObj::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 

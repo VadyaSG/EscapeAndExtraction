@@ -63,3 +63,8 @@ bool UHealthComponent::is_health_full() const
 {
 	return current_hp>=max_hp;
 }
+
+void UHealthComponent::apply_damage(float damage)
+{
+	current_hp -= damage;
+}

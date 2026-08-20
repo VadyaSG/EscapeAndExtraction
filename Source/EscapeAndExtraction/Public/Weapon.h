@@ -10,13 +10,13 @@
 class USphereComponent;
 
 UCLASS()
-class ESCAPEANDEXTRACTION_API AWeapon : public AActor
+class ESCAPEANDEXTRACTION_API APickUpObj : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	
-	AWeapon();
+	APickUpObj();
 	virtual void Tick(float DeltaTime) override;
 
 protected:

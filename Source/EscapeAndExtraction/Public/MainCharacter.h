@@ -57,7 +57,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UHotBar* micro_inventory;
 
-
+	AActor* get_current_equipped_item()const { return cuurent_equipped_item; }
 protected:
 	
 	virtual void BeginPlay() override;
