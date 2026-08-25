@@ -7,6 +7,7 @@
 #include "BaseEnemy.generated.h"
 
 class UHealthComponent;
+class UWidgetComponent;
 
 UCLASS()
 class ESCAPEANDEXTRACTION_API ABaseEnemy : public ACharacter
@@ -20,6 +21,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UHealthComponent* health_component;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UWidgetComponent* hp_widget_comp;
 
 protected:
 	

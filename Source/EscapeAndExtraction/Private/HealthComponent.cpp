@@ -7,14 +7,14 @@
 UHealthComponent::UHealthComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
+	current_hp = max_hp;
 }
 
 
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	current_hp = max_hp;
+	
 
 	on_health_changed.Broadcast(current_hp,max_hp);
 
@@ -64,7 +64,3 @@ bool UHealthComponent::is_health_full() const
 	return current_hp>=max_hp;
 }
 
-void UHealthComponent::apply_damage(float damage)
-{
-	current_hp -= damage;
-}
