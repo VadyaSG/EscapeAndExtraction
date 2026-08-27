@@ -14,6 +14,7 @@
 #include "HealthComponent.h"
 #include "HotBar.h"
 #include "WeaponComponent.h"
+#include <GameSettings.h>
 
 
 
@@ -158,11 +159,14 @@ void AMainCharacter::move(const FInputActionValue& value)
 void AMainCharacter::look(const FInputActionValue& value)
 {
 	const FVector2D look_vector = value.Get<FVector2D>();
+	const UGameSettings* Settings = GetDefault<UGameSettings>();
+
+	float sensitivity = Settings ? Settings->mouse_sensivity : 1.0f;
 
 	if (Controller != nullptr)
 	{
-		AddControllerYawInput(look_vector.X);
-		AddControllerPitchInput(look_vector.Y);
+		AddControllerYawInput(look_vector.X*sensitivity);
+		AddControllerPitchInput(look_vector.Y*sensitivity);
 	}
 }
 

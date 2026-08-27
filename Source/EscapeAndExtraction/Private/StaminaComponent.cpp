@@ -2,11 +2,15 @@
 
 
 #include "StaminaComponent.h"
+#include "GameSettings.h" 
 
 UStaminaComponent::UStaminaComponent()
 {
 	
 	PrimaryComponentTick.bCanEverTick = true;
+	const UGameSettings* Settings = GetDefault<UGameSettings>();
+	stamina_drain_rate = Settings->stamina_drain_rate;
+	stamina_regen_rate = Settings->stamina_regen_rate;
 }
 
 
@@ -15,6 +19,7 @@ void UStaminaComponent::BeginPlay()
 	Super::BeginPlay();
 	current_stamina = max_stamina;
 	on_stamina_changed.Broadcast(1.f);
+	
 }
 
 

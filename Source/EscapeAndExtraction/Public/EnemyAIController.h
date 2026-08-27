@@ -37,7 +37,7 @@ protected:
 
 	UAISenseConfig_Sight* sight_config;
 
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category = "AI")
 	UBehaviorTree* behavor_tree;
 
 	UFUNCTION()

@@ -46,7 +46,7 @@ protected:
 	float stamina_drain_rate = 10.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Stats | Stamina", meta = (ClampMin = "0.0"))
-	float stamina_regen_rate = 2.f;
+	float stamina_regen_rate = 8.f;
 
 private:
 	bool is_running = false;
