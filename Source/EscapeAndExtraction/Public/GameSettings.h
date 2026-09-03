@@ -30,6 +30,9 @@ public:
 	float enemy_modification;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Balancing")
+	float time_to_escape;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Balancing")
 	float stamina_drain_rate;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Balancing")
@@ -61,6 +64,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Gameplay", meta = (DisplayName = "Get update difficulty time"))
 	static float get_update_difficulty_time();
+
+	UFUNCTION(BlueprintPure, Category = "Gameplay", meta = (DisplayName = "Get time to escape"))
+	static float get_time_to_escape();
 }; 
 
 

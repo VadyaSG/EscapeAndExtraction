@@ -14,6 +14,7 @@ UGameSettings::UGameSettings()
 	min_spawn_delay = 0.5f;
 	difficulty_step = 0.2f;
 	update_difficulty_time = 10.f;
+	time_to_escape = 300.f;
 }
 
 float UGameSettings::GetEnemyModificationFactor()
@@ -50,4 +51,10 @@ float UGameSettings::get_update_difficulty_time()
 {
 	const UGameSettings* Settings = GetDefault<UGameSettings>();
 	return Settings ? Settings->update_difficulty_time : 10.f;
+}
+
+float UGameSettings::get_time_to_escape()
+{
+	const UGameSettings* Settings = GetDefault<UGameSettings>();
+	return Settings ? Settings->time_to_escape : 300.f;
 }

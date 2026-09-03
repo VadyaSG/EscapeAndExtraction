@@ -15,7 +15,7 @@ AEnemyAIController::AEnemyAIController()
 
 	sight_config->SightRadius = 1500.f;
 	sight_config->LoseSightRadius = 2000.f;
-	sight_config->PeripheralVisionAngleDegrees = 90.f;
+	sight_config->PeripheralVisionAngleDegrees = 120.f;
 	sight_config->DetectionByAffiliation.bDetectEnemies = true;
 	sight_config->DetectionByAffiliation.bDetectFriendlies = true;
 	sight_config->DetectionByAffiliation.bDetectNeutrals = true;

@@ -6,15 +6,20 @@
 #include "Components/ActorComponent.h"
 #include "WeaponComponent.generated.h"
 
+class USoundBase;
+class UNiagaraSystem;
+class AMainCharacter;
+class USoundBase;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, current_ammo, int32, max_ammo);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ESCAPEANDEXTRACTION_API UWeaponComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	
+public:
+
 	UWeaponComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void start_fire(const FVector& camera_loc, const FRotator& camera_rot);
@@ -44,15 +49,32 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Weapon | Events")
 	FOnAmmoChanged on_ammo_changed;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon |sounds")
+	USoundBase* shoot_sound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon |VFX")
+	UNiagaraSystem* start_shoot_flash;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon |VFX")
+	UNiagaraSystem* tracer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon |Animation")
+	UAnimMontage* reload_animation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon |Animation")
+	USoundBase* reload_sound;
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon | Actions")
 	void fire(const FVector& spawn_location, const FRotator& spawn_rotation);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon | Actions")
 	void reload();
 
+	void complete_reload_with_param(AMainCharacter* player_owner);
+
 protected:
 	virtual void BeginPlay() override;
 	FTimerHandle fire_timer_handle;
 	void shot_bullet();
-	
+
 };

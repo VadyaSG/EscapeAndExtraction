@@ -7,7 +7,6 @@
 #include "HotBar.h"
 #include "MainCharacter.generated.h"
 
-
 class UCameraComponent;
 class USpringArmComponent;
 class UInputMappingContext;
@@ -24,11 +23,15 @@ class ESCAPEANDEXTRACTION_API AMainCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	
+
 	AMainCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	int32 get_active_slot_index()const { return active_slot_index; }
+	void set_is_reload(bool reload) { is_reloading = reload; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Condition")
+	bool is_attack = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputMappingContext* input_mapping_context;
@@ -57,9 +60,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UHotBar* micro_inventory;
 
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	AActor* get_current_equipped_item()const { return cuurent_equipped_item; }
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UCameraComponent* camera_comp;
+
+	void reload();
 protected:
-	
+
 	virtual void BeginPlay() override;
 	UFUNCTION()
 	void move(const FInputActionValue& value);
@@ -89,7 +98,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float backward_walk_speed = 150.f;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float running_speed = 600.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
@@ -98,14 +107,8 @@ protected:
 	UFUNCTION()
 	void on_stamina_emty();
 
-	UFUNCTION()
-	void reload();
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* spring_arm_comp;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UCameraComponent* camera_comp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UStaminaComponent* stamina_component;
@@ -122,10 +125,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Animations|Combat")
 	float aim_pitch = 0.f;
 
-	
+
 private:
 	float current_forward_input = 0;
 	float last_scroll_time = 0.f;
+	bool is_reloading = false;
 
 	UFUNCTION()
 	void death_handle();

@@ -80,6 +80,15 @@ void AMainCharacter::Tick(float DeltaTime)
 			weapon_comp->last_camera_rot = camera_comp->GetComponentRotation();
 		}
 	}
+
+	if (current_grip_type == EWeaponGripType::Unarmed)
+	{
+		is_attack = true;
+	}
+	else
+	{
+		is_attack = false;
+	}
 }
 
 void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -172,6 +181,8 @@ void AMainCharacter::look(const FInputActionValue& value)
 
 void AMainCharacter::start_sprint()
 {
+	if (is_reloading)return;
+	stop_attack();
 	
 	if (stamina_component && stamina_component->can_running())
 	{
@@ -237,6 +248,7 @@ void AMainCharacter::start_attack()
 {
 	if (health_component && health_component->is_dead()) return;
 	if (is_sprinting) return;
+	if (is_reloading) return;
 
 	const TArray<FHotbarItemSlot>& current_slots = micro_inventory->get_all_slots();
 	if (!current_slots.IsValidIndex(active_slot_index)) return;
@@ -256,10 +268,7 @@ void AMainCharacter::start_attack()
 				current_grip_type = EWeaponGripType::Unarmed;
 			}
 
-			if (hand_attack_animation)
-			{
-				PlayAnimMontage(hand_attack_animation);
-			}
+			
 		}
 		else
 		{
@@ -338,6 +347,7 @@ void AMainCharacter::select_hotbar_slot(const FInputActionValue& value)
 	{
 		cuurent_equipped_item->Destroy();
 		cuurent_equipped_item = nullptr;
+		is_reloading = false;
 	}
 
 	if (target_slot.is_emty())
@@ -385,25 +395,32 @@ void AMainCharacter::select_hotbar_slot(const FInputActionValue& value)
 
 void AMainCharacter::reload()
 {
-	if (health_component && health_component->is_dead())return;
-	if (cuurent_equipped_item == nullptr)return;
-	if (is_sprinting)return;
+	if (health_component && health_component->is_dead()) return;
+	if (cuurent_equipped_item == nullptr) return;
+	if (is_sprinting) return;
 
 	UWeaponComponent* weapon_comp = cuurent_equipped_item->FindComponentByClass<UWeaponComponent>();
 
-	if (weapon_comp&& weapon_comp->ammo_in_inventory>0)
+	if (weapon_comp)
 	{
-		weapon_comp->reload();
+		if (weapon_comp->current_ammo_in_magazine == weapon_comp->max_magazine_capacity || weapon_comp->ammo_in_inventory <= 0) return;
 
-		int32 active_index = get_active_slot_index();
-		micro_inventory->update_ammo_by_index(active_index, weapon_comp->current_ammo_in_magazine, weapon_comp->ammo_in_inventory);
+		weapon_comp->stop_fire();
+		is_reloading = true;
+
+		if (weapon_comp->reload_animation)
+		{
+			PlayAnimMontage(weapon_comp->reload_animation);
+		}
+
+		weapon_comp->reload();
 	}
 }
 
 void AMainCharacter::stop_attack()
 {
 	if (cuurent_equipped_item == nullptr) return;
-
+	
 	UWeaponComponent* weapon_comp = cuurent_equipped_item->FindComponentByClass<UWeaponComponent>();
 	if (weapon_comp != nullptr)
 	{
