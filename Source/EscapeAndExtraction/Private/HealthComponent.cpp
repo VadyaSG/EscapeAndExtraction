@@ -64,3 +64,8 @@ bool UHealthComponent::is_health_full() const
 	return current_hp>=max_hp;
 }
 
+void UHealthComponent::set_curren_hp(float hp)
+{
+	current_hp = hp; 
+}
+

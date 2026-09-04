@@ -33,6 +33,8 @@ public:
 	bool add_health(float new_health);
 	bool is_health_full() const;
 
+	UFUNCTION(BlueprintCallable)
+	void set_curren_hp(float hp);
 protected:
 	
 	virtual void BeginPlay() override;
